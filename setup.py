@@ -1,35 +1,53 @@
+"""module installation script"""
+
 import runpy
 from pathlib import Path
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages #type: ignore
 
-classifiers = '''Development Status :: 3 - Alpha
-Programming Language :: Python :: 3.6
-Programming Language :: Python :: 3.7
-Programming Language :: Python :: 3.8
-Programming Language :: Python :: 3.9
-Programming Language :: Python :: 3.10'''
+NAME = "deli"
+DESCRIPTION = "Smart serialization and deserialization for (almost) any python object"
+LICENSE = "MIT"
+URL = "https://github.com/maxme1/deli"
 
-name = 'deli'
-root = Path(__file__).resolve().parent
-with open(root / 'requirements.txt', encoding='utf-8') as file:
-    requirements = file.read().splitlines()
-with open(root / 'README.md', encoding='utf-8') as file:
-    long_description = file.read()
-version = runpy.run_path(root / name / '__version__.py')['__version__']
+CLASSIFIERS = [
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7" ,
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Development Status :: 3 - Alpha",
+]
+KEYWORDS = ["serialization"]
+
+ROOT = Path(__file__).resolve().parent
+
+VERSION = runpy.run_path(str(ROOT / NAME / "__version__.py"))["__version__"]
+
+with open(ROOT / "README.md", "r", encoding="utf-8") as file:
+    LONG_DESCRIPTION = file.read()
+
+with open(ROOT / "requirements.txt", "r", encoding="utf-8") as file:
+    REQUIREMENTS = file.read().splitlines()
+
+DOWNLOAD_URL = f"{URL}/archive/v{VERSION}.tar.gz"
+
 
 setup(
-    name=name,
-    packages=find_packages(include=(name,)),
+    name=NAME,
+    description=DESCRIPTION,
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type="text/markdown",
+    license=LICENSE,
+    version=VERSION,
+    url=URL,
+    download_url=DOWNLOAD_URL,
+    packages=find_packages(include=(NAME,)),
     include_package_data=True,
-    version=version,
-    description='Smart serialization and deserialization for (almost) any python object',
-    long_description=long_description,
-    long_description_content_type='text/markdown',
-    url='https://github.com/maxme1/deli',
-    download_url='https://github.com/maxme1/deli/archive/v%s.tar.gz' % version,
-    keywords=['serialization'],
-    classifiers=classifiers.splitlines(),
-    install_requires=requirements,
-    python_requires='>=3.6',
+    install_requires=REQUIREMENTS,
+    classifiers=CLASSIFIERS,
+    keywords=KEYWORDS,
+    python_requires=">=3.6",
 )
