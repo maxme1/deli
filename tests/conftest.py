@@ -1,13 +1,17 @@
-"""random data generation"""
-
 import io
 import json
 import random
+from pathlib import Path
 
 import numpy as np
 import pytest
 import requests  # type: ignore
 from PIL import Image  # type: ignore
+
+
+@pytest.fixture
+def tests_root():
+    return Path(__file__).resolve().parent
 
 
 @pytest.fixture(name="np3d")

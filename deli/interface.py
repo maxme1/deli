@@ -5,7 +5,7 @@ from gzip import GzipFile
 from os import PathLike
 from typing import Any, Union, BinaryIO
 
-from .serializer import MaybeHint, WrongSerializer, REGISTRY
+from .serializer import MaybeHint, WrongSerializer, REGISTRY, Hint
 from .serializers.choice import Choice
 
 __all__ = [
@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-def load(source: Union[str, PathLike, BinaryIO], hint: MaybeHint = None, **kwargs):
+def load(source: Union[str, PathLike, BinaryIO], hint: MaybeHint = None, **kwargs) -> Any:
     """
     Load a value from a file-like or buffer `source`.
     `hint` is used to override the format detection.
@@ -44,7 +44,7 @@ def load(source: Union[str, PathLike, BinaryIO], hint: MaybeHint = None, **kwarg
     return choice.load_buffer(source, hint, True, kwargs)
 
 
-def save(value: Any, destination: Union[str, PathLike, BinaryIO], hint: MaybeHint = None, **kwargs) -> str:
+def save(value: Any, destination: Union[str, PathLike, BinaryIO], hint: MaybeHint = None, **kwargs) -> Hint:
     """
     Save `value` to a file-like or buffer `destination`.
     `hint` is used to override the format detection.
