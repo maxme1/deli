@@ -29,7 +29,16 @@ try:
     try:
         from imageio.v3 import imread, imwrite
     except ImportError:
-        from imageio import imread, imwrite
+        # py3.6
+        from imageio import imread as _imread, imwrite as _imwrite
+
+
+        def imread(x, extension):
+            return _imread(x, format=extension)
+
+
+        def imwrite(x, y, extension):
+            return _imwrite(x, y, format=extension)
 
     import numpy as np
 
