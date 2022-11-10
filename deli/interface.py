@@ -1,11 +1,14 @@
 import json
+import os
 import pickle
-from pathlib import Path
-from typing import Union
 from gzip import GzipFile
+from os import PathLike
+from typing import Any, Union, BinaryIO
+
+from .serializer import MaybeHint, WrongSerializer, REGISTRY
+from .serializers.choice import Choice
 
 __all__ = [
-    'PathLike',
     'load', 'save',
     'load_json', 'save_json',
     'load_pickle', 'save_pickle',
@@ -14,85 +17,57 @@ __all__ = [
     'load_text', 'save_text',
 ]
 
-PathLike = Union[Path, str]
 
-
-def load(path: PathLike, ext: str = None, **kwargs):
+def load(source: Union[str, PathLike, BinaryIO], hint: MaybeHint = None, **kwargs):
     """
-    Load a file located at ``path``.
-    ``kwargs`` are format-specific keyword arguments.
-    The following extensions are supported:
-        npy, tif, png, jpg, bmp, hdr, img, csv,
-        dcm, nii, nii.gz, json, mhd, csv, txt, pickle, pkl, config
+    Load a value from a file-like or buffer `source`.
+    `hint` is used to override the format detection.
+    `kwargs` are format-specific keyword arguments.
     """
-    name = Path(path).name if ext is None else ext
+    choice = Choice(*REGISTRY)
 
-    if name.endswith(('.npy', '.npy.gz')):
-        if name.endswith('.gz'):
-            kwargs['decompress'] = True
-        return load_numpy(path, **kwargs)
-    if name.endswith(('.csv', '.csv.gz')):
-        return load_csv(path, **kwargs)
-    if name.endswith(('.nii', '.nii.gz', '.hdr', '.img')):
-        import nibabel
-        return nibabel.load(str(path), **kwargs).get_fdata()
-    if name.endswith('.dcm'):
-        import pydicom
-        return pydicom.dcmread(str(path), **kwargs)
-    if name.endswith(('.png', '.jpg', '.tif', '.bmp')):
-        from imageio import imread
-        return imread(path, **kwargs)
-    if name.endswith('.json'):
-        return load_json(path, **kwargs)
-    if name.endswith(('.pkl', '.pickle')):
-        return load_pickle(path, **kwargs)
-    if name.endswith('.txt'):
-        return load_text(path)
-    if name.endswith('.config'):
-        import lazycon
-        return lazycon.load(path, **kwargs)
+    if isinstance(source, (str, PathLike)):
+        if hint is None:
+            hint = os.path.basename(os.fspath(source))
 
-    raise ValueError(f'Couldn\'t read file "{path}". Unknown extension.')
+        try:
+            return choice.load_path(source, hint, kwargs)
+        except WrongSerializer:
+            pass
+
+        with open(source, 'rb') as buffer:
+            return choice.load_buffer(buffer, hint, False, kwargs)
+
+    if not isinstance(source, BinaryIO):
+        raise TypeError('Need a binary buffer')
+
+    return choice.load_buffer(source, hint, True, kwargs)
 
 
-def save(value, path: PathLike, **kwargs):
+def save(value: Any, destination: Union[str, PathLike, BinaryIO], hint: MaybeHint = None, **kwargs) -> str:
     """
-    Save ``value`` to a file located at ``path``.
-    ``kwargs`` are format-specific keyword arguments.
-    The following extensions are supported:
-        npy, npy.gz, tif, png, jpg, bmp, hdr, img, csv
-        nii, nii.gz, json, mhd, csv, txt, pickle, pkl
+    Save `value` to a file-like or buffer `destination`.
+    `hint` is used to override the format detection.
+    `kwargs` are format-specific keyword arguments.
     """
-    name = Path(path).name
+    choice = Choice(*REGISTRY)
 
-    if name.endswith(('.npy', '.npy.gz')):
-        if name.endswith('.npy.gz') and 'compression' not in kwargs:
-            raise ValueError('If saving to gz need to specify a compression.')
+    if isinstance(destination, (str, PathLike)):
+        if hint is None:
+            hint = os.path.basename(os.fspath(destination))
 
-        save_numpy(value, path, **kwargs)
-    elif name.endswith(('.csv', '.csv.gz')):
-        if name.endswith('.csv.gz') and 'compression' not in kwargs:
-            raise ValueError('If saving to gz need to specify a compression.')
+        try:
+            return choice.save_path(value, destination, hint, kwargs)
+        except WrongSerializer:
+            pass
 
-        save_csv(value, path, **kwargs)
-    elif name.endswith(('.nii', '.nii.gz', '.hdr', '.img')):
-        import nibabel
-        nibabel.save(value, str(path), **kwargs)
-    elif name.endswith('.dcm'):
-        import pydicom
-        pydicom.dcmwrite(str(path), value, **kwargs)
-    elif name.endswith(('.png', '.jpg', '.tif', '.bmp')):
-        from imageio import imsave
-        imsave(path, value, **kwargs)
-    elif name.endswith('.json'):
-        save_json(value, path, **kwargs)
-    elif name.endswith(('.pkl', '.pickle')):
-        save_pickle(value, path, **kwargs)
-    elif name.endswith('.txt'):
-        save_text(value, path)
+        with open(destination, 'wb') as buffer:
+            return choice.save_buffer(value, buffer, hint, kwargs)
 
-    else:
-        raise ValueError(f'Couldn\'t write to file "{path}". Unknown extension.')
+    if not isinstance(destination, BinaryIO):
+        raise TypeError('Need a binary buffer')
+
+    return choice.save_buffer(value, destination, hint, kwargs)
 
 
 def load_json(path: PathLike):
