@@ -1,3 +1,4 @@
+import pickle
 from pathlib import Path
 
 import numpy as np
@@ -10,4 +11,7 @@ except ImportError:
 root = Path(__file__).resolve().parent / 'assets/synthetic'
 root.mkdir(exist_ok=True)
 
-imwrite(root / 'file.png', np.random.randint(0, 256, size=(10, 10, 4), dtype=np.uint8))
+image = np.random.randint(0, 256, size=(10, 10, 4), dtype=np.uint8)
+imwrite(root / 'file.png', image)
+with open(root / 'file.png', 'wb') as file:
+    pickle.dump(image, file)
