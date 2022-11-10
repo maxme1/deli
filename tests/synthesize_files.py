@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-from imageio.v3 import imwrite
+from imageio import imwrite
 
 root = Path(__file__).resolve().parent / 'assets/synthetic'
 root.mkdir(exist_ok=True)
