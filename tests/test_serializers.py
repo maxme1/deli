@@ -8,7 +8,7 @@ extra_args = {
 
 
 def test_idempotency(subtests, tests_root, tmpdir):
-    for file in (tests_root / 'assets').rglob('*'):
+    for file in sorted(list((tests_root / 'assets').rglob('*'))):
         if file.is_dir():
             continue
 
@@ -17,4 +17,4 @@ def test_idempotency(subtests, tests_root, tmpdir):
             save(load(file), target, **extra_args.get(file.name, {}))
 
             with file.open('rb') as expected, target.open('rb') as actual:
-                assert actual.read() == expected.read()
+                assert actual.read() == expected.read(), file.name

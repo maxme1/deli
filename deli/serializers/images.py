@@ -26,7 +26,11 @@ class ImageIO(ExtensionMatch, SourceAgnostic):
 
 
 try:
-    from imageio.v3 import imread, imwrite
+    try:
+        from imageio.v3 import imread, imwrite
+    except ImportError:
+        from imageio import imread, imwrite
+
     import numpy as np
 
     REGISTRY.append(ImageIO())
