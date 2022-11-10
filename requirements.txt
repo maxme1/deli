@@ -2,4 +2,4 @@ pandas
 pydicom
 nibabel
 numpy
-imageio
+imageio>=2.0.0
