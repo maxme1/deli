@@ -1,0 +1,5 @@
+pandas
+pydicom
+nibabel
+numpy
+imageio>=2.0.0

@@ -34,7 +34,7 @@ jobs:
           pip install -r tests/requirements.txt
 
           bash tests/download_files.sh
-          python tests/synthesize_files.sh
+          python tests/synthesize_files.py
 
           cd tests
           export MODULE_PARENT=$(python -c "import $MODULE_NAME, os; print(os.path.dirname($MODULE_NAME.__path__[0]))")

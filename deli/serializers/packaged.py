@@ -1,8 +1,14 @@
 import json
 import pickle
-from gzip import GzipFile, BadGzipFile
+from gzip import GzipFile
 from io import TextIOWrapper
 from typing import Any, BinaryIO
+
+try:
+    from gzip import BadGzipFile
+except ImportError:
+    # for py3.6
+    BadGzipFile = OSError
 
 from .helpers import ExtensionMatch, NoPath
 from ..serializer import Serializer, MatchHint, MaybeHint, WrongSerializer, REGISTRY, Hint
