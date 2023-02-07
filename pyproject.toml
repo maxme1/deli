@@ -1,0 +1,46 @@
+[project]
+name = "deli"
+dynamic = ["version"]
+description = "Smart serialization and deserialization for (almost) any python object"
+readme = "README.md"
+requires-python = ">=3.6"
+license = { file = "LICENSE" }
+keywords = ["serialization"]
+authors = [
+    { name = "Max", email = "maxs987@gmail.com" }
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3 :: Only",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pandas",
+    "pydicom",
+    "nibabel",
+    "numpy",
+    "imageio>=2.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/maxme1/deli"
+"Issues" = "https://github.com/maxme1/deli/issues"
+"Source" = "https://github.com/maxme1/deli"
+
+[build-system]
+requires = ["setuptools>=43.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["deli"]
+
+[tool.setuptools.dynamic]
+version = { attr = "deli.__version__.__version__" }
