@@ -1,7 +1,7 @@
 from os import PathLike
 from typing import BinaryIO, Any, Union
 
-from ..serializer import MaybeHint, REGISTRY, Hint
+from ..serializer import MaybeHint, REGISTRY, Hint, WrongSerializer
 from .helpers import ExtensionMatch, SourceAgnostic
 from .packaged import Gzip
 
@@ -16,7 +16,12 @@ class CSV(ExtensionMatch, SourceAgnostic):
         return set(params) <= {'index'}
 
     def load(self, source: Union[PathLike, BinaryIO], hint: MaybeHint, params) -> Any:
-        return pd.read_csv(source)
+        try:
+            return pd.read_csv(source)
+        except pd.errors.EmptyDataError as e:
+            if hint is not None:
+                raise
+            raise WrongSerializer from e
 
     def save(self, value: Any, destination: Union[PathLike, BinaryIO], hint: MaybeHint, params) -> Hint:
         value.to_csv(destination, **params)
