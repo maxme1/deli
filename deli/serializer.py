@@ -1,23 +1,19 @@
 from abc import ABC, abstractmethod
-from enum import Enum
 from os import PathLike
 from pathlib import Path
-from typing import Any, Union, BinaryIO
+from typing import Any, Union, BinaryIO, Optional
 
 Hint = str
 MaybeHint = Union[str, None]
 MaybePath = Union[Path, None]
+MaybeSerializer = Optional['Serializer']
 REGISTRY = []
-
-
-class MatchHint(Enum):
-    Accept, NotSure, Reject = 0, 1, 2
 
 
 class Serializer(ABC):
     # save
     @abstractmethod
-    def match_save_buffer(self, value: Any, hint: MaybeHint, params: dict) -> MatchHint:
+    def match_save_buffer(self, value: Any, hint: MaybeHint, params: dict) -> MaybeSerializer:
         pass
 
     @abstractmethod
@@ -25,7 +21,7 @@ class Serializer(ABC):
         pass
 
     @abstractmethod
-    def match_save_path(self, value: Any, destination: PathLike, hint: Hint, params: dict) -> MatchHint:
+    def match_save_path(self, value: Any, destination: PathLike, hint: Hint, params: dict) -> MaybeSerializer:
         pass
 
     @abstractmethod
@@ -34,7 +30,7 @@ class Serializer(ABC):
 
     # load
     @abstractmethod
-    def match_load_buffer(self, hint: MaybeHint, allow_lazy: bool, params: dict) -> MatchHint:
+    def match_load_buffer(self, hint: MaybeHint, allow_lazy: bool, params: dict) -> MaybeSerializer:
         pass
 
     @abstractmethod
@@ -42,7 +38,7 @@ class Serializer(ABC):
         pass
 
     @abstractmethod
-    def match_load_path(self, source: PathLike, hint: Hint, params: dict) -> MatchHint:
+    def match_load_path(self, source: PathLike, hint: Hint, params: dict) -> MaybeSerializer:
         pass
 
     @abstractmethod

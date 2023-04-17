@@ -26,22 +26,29 @@ def load(source: Union[str, PathLike, BinaryIO], hint: MaybeHint = None, **kwarg
     """
     choice = Choice(*REGISTRY)
 
+    hint = _resolve_hint(hint, source)
+    strict = hint is not None
+    # TODO: what is it's both BinaryIO and PathLike?
     if isinstance(source, (str, PathLike)):
-        if hint is None:
-            hint = os.path.basename(os.fspath(source))
+        loader = choice
+        if strict:
+            loader = choice.match_load_path(source, hint, kwargs)
+            if loader is None:
+                raise WrongSerializer(f"Couldn't load from value using {hint!r} as hint")
 
-        try:
-            return choice.load_path(source, hint, kwargs)
-        except WrongSerializer:
-            pass
-
-        with open(source, 'rb') as buffer:
-            return choice.load_buffer(buffer, hint, False, kwargs)
+        return loader.load_path(source, hint, kwargs)
 
     if not isinstance(source, BinaryIO):
-        raise TypeError('Need a binary buffer')
+        raise TypeError(f'Need a binary buffer, not {type(source).__name__}')
 
-    return choice.load_buffer(source, hint, True, kwargs)
+    # TODO: reuse
+    loader = choice
+    if strict:
+        loader = choice.match_load_buffer(hint, True, kwargs)
+        if loader is None:
+            raise WrongSerializer(f"Couldn't load from value using {hint!r} as hint")
+
+    return loader.load_buffer(source, hint, True, kwargs)
 
 
 def save(value: Any, destination: Union[str, PathLike, BinaryIO], hint: MaybeHint = None, **kwargs) -> Hint:
@@ -52,24 +59,45 @@ def save(value: Any, destination: Union[str, PathLike, BinaryIO], hint: MaybeHin
     """
     choice = Choice(*REGISTRY)
 
+    hint = _resolve_hint(hint, destination)
+    strict = hint is not None
+    # TODO: what is it's both BinaryIO and PathLike?
     if isinstance(destination, (str, PathLike)):
-        if hint is None:
-            hint = os.path.basename(os.fspath(destination))
+        loader = choice
+        if strict:
+            loader = choice.match_save_path(value, destination, hint, kwargs)
+            if loader is None:
+                raise WrongSerializer(f"Couldn't save value using {hint!r} as hint")
 
-        try:
-            return choice.save_path(value, destination, hint, kwargs)
-        except WrongSerializer:
-            pass
-
-        with open(destination, 'wb') as buffer:
-            return choice.save_buffer(value, buffer, hint, kwargs)
+        return loader.save_path(value, destination, hint, kwargs)
 
     if not isinstance(destination, BinaryIO):
-        raise TypeError('Need a binary buffer')
+        raise TypeError(f'Need a binary buffer, not {type(destination).__name__}')
 
-    return choice.save_buffer(value, destination, hint, kwargs)
+    # TODO: reuse
+    loader = choice
+    if strict:
+        loader = choice.match_save_buffer(value, hint, kwargs)
+        if loader is None:
+            raise WrongSerializer(f"Couldn't save value using {hint!r} as hint")
+
+    return loader.save_buffer(value, destination, hint, kwargs)
 
 
+def _resolve_hint(hint, path) -> MaybeHint:
+    assert isinstance(hint, (str, bool)) or hint is None, hint
+    if hint is None:
+        hint = True
+    if isinstance(hint, str):
+        return hint
+    if not hint:
+        return None
+    if isinstance(path, (str, PathLike)):
+        return os.path.basename(os.fspath(path))
+    return None
+
+
+# TODO: rewrite as generic calls with hints
 def load_json(path: PathLike):
     """Load the contents of a json file."""
     with open(path, 'r') as f:
