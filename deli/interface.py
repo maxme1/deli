@@ -100,8 +100,7 @@ def _resolve_hint(hint, path) -> MaybeHint:
 # TODO: rewrite as generic calls with hints
 def load_json(path: PathLike):
     """Load the contents of a json file."""
-    with open(path, 'r') as f:
-        return json.load(f)
+    return load(path, hint='.json')
 
 
 def save_json(value, path: PathLike, *, indent: int = None):
