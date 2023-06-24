@@ -18,7 +18,7 @@ class JSON(PathAsBuffer, ExtensionMatch):
     extensions = '.json',
 
     def _match_save_params(self, params: dict):
-        return set(params) <= {'indent'}
+        return set(params) <= {'indent', 'cls'}
 
     def load_buffer(self, source: BinaryIO, hint: MaybeHint, allow_lazy: bool, params: dict) -> Any:
         wrapper = TextIOWrapper(source)
