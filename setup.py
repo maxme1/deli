@@ -47,6 +47,15 @@ setup(
     packages=find_packages(include=(NAME,)),
     include_package_data=True,
     install_requires=REQUIREMENTS,
+    extras_require={
+        'all': [
+            'pandas',
+            'pydicom',
+            'nibabel',
+            'numpy',
+            'imageio>=2.0.0',
+        ]
+    },
     classifiers=CLASSIFIERS,
     keywords=KEYWORDS,
     python_requires='>=3.6',

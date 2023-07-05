@@ -21,11 +21,12 @@ jobs:
 
       - name: Build the package
         run: |
-          python setup.py sdist
+          pip install build
+          python -m build --sdist
 
       - name: Setup
         run: |
-          pip install dist/*
+          pip install .[all]
           pip install -r tests/requirements.txt
 
           bash tests/download_files.sh
