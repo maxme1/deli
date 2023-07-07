@@ -1,9 +1,8 @@
-import json
+from io import RawIOBase, BufferedIOBase
 import os
-import pickle
 from gzip import GzipFile
 from os import PathLike
-from typing import Any, Union, BinaryIO
+from typing import Any, Optional, Union, BinaryIO
 
 from .serializer import MaybeHint, WrongSerializer, REGISTRY, Hint
 from .serializers.choice import Choice
@@ -38,7 +37,7 @@ def load(source: Union[str, PathLike, BinaryIO], hint: MaybeHint = None, **kwarg
 
         return loader.load_path(source, hint, kwargs)
 
-    if not isinstance(source, BinaryIO):
+    if not is_binary_io(source):
         raise TypeError(f'Need a binary buffer, not {type(source).__name__}')
 
     # TODO: reuse
@@ -61,7 +60,7 @@ def save(value: Any, destination: Union[str, PathLike, BinaryIO], hint: MaybeHin
 
     hint = _resolve_hint(hint, destination)
     strict = hint is not None
-    # TODO: what is it's both BinaryIO and PathLike?
+    # TODO: what if it's both BinaryIO and PathLike?
     if isinstance(destination, (str, PathLike)):
         loader = choice
         if strict:
@@ -71,7 +70,7 @@ def save(value: Any, destination: Union[str, PathLike, BinaryIO], hint: MaybeHin
 
         return loader.save_path(value, destination, hint, kwargs)
 
-    if not isinstance(destination, BinaryIO):
+    if not is_binary_io(destination):
         raise TypeError(f'Need a binary buffer, not {type(destination).__name__}')
 
     # TODO: reuse
@@ -97,16 +96,14 @@ def _resolve_hint(hint, path) -> MaybeHint:
     return None
 
 
-# TODO: rewrite as generic calls with hints
 def load_json(path: PathLike):
     """Load the contents of a json file."""
     return load(path, hint='.json')
 
 
-def save_json(value, path: PathLike, *, indent: int = None):
+def save_json(value, path: PathLike, *, indent: Optional[int] = None):
     """Dump a json-serializable object to a json file."""
-    with open(path, 'w') as f:
-        json.dump(value, f, indent=indent)
+    save(value, path, hint='.json', indent=indent)
 
 
 def save_numpy(value, path: PathLike, *, allow_pickle: bool = True, fix_imports: bool = True, compression: int = None,
@@ -134,27 +131,23 @@ def load_numpy(path: PathLike, *, allow_pickle: bool = False, fix_imports: bool 
 
 def save_pickle(value, path: PathLike):
     """Pickle a ``value`` to ``path``."""
-    with open(path, 'wb') as file:
-        pickle.dump(value, file)
+    save(value, path, hint='.pkl')
 
 
 def load_pickle(path: PathLike):
     """Load a pickled value from ``path``."""
-    with open(path, 'rb') as file:
-        return pickle.load(file)
+    return load(path, hint='.pkl')
 
 
 def save_text(value: str, path: PathLike):
-    with open(path, mode='w') as file:
-        file.write(value)
-
+    save(value, path, hint='.txt')
+    
 
 def load_text(path: PathLike):
-    with open(path, mode='r') as file:
-        return file.read()
+    return load(path, hint='.txt')
 
 
-def save_csv(value, path: PathLike, *, compression: int = None, **kwargs):
+def save_csv(value, path: PathLike, *, compression: Optional[int] = None, **kwargs):
     if compression is not None:
         kwargs['compression'] = {
             'method': 'gzip',
@@ -165,5 +158,8 @@ def save_csv(value, path: PathLike, *, compression: int = None, **kwargs):
 
 
 def load_csv(path: PathLike, **kwargs):
-    import pandas as pd
-    return pd.read_csv(path, **kwargs)
+    return load(path, hint='.csv', **kwargs)
+
+
+def is_binary_io(x):
+    return isinstance(x, (BinaryIO, RawIOBase, BufferedIOBase))
