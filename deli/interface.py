@@ -1,4 +1,3 @@
-from io import RawIOBase, BufferedIOBase
 import os
 from gzip import GzipFile
 from os import PathLike
@@ -141,7 +140,7 @@ def load_pickle(path: PathLike):
 
 def save_text(value: str, path: PathLike):
     save(value, path, hint='.txt')
-    
+
 
 def load_text(path: PathLike):
     return load(path, hint='.txt')
@@ -162,4 +161,8 @@ def load_csv(path: PathLike, **kwargs):
 
 
 def is_binary_io(x):
-    return isinstance(x, (BinaryIO, RawIOBase, BufferedIOBase))
+    if isinstance(x, (str, os.PathLike)):
+        return False
+    if hasattr(x, 'read') and hasattr(x, 'seek') and hasattr(x, 'tell'):
+        return True
+    return False
